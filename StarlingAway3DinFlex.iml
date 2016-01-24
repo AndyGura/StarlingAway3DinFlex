@@ -5,10 +5,10 @@
       <configuration name="StarlingAway3DinFlex" target-platform="Desktop" output-type="Library" output-file="StarlingAway3DinFlex.swc" output-folder="$MODULE_DIR$/bin">
         <dependencies target-player="20.0">
           <entries>
-            <entry library-name="away3d-core-fp11_4_1_6" library-level="project">
+            <entry library-id="33ba36b4-0b83-4594-b145-400ba2209c5d">
               <dependency linkage="Merged" />
             </entry>
-            <entry library-name="starling" library-level="project">
+            <entry library-id="b0a7a2cb-aa64-434e-82c6-0ef72bb06a95">
               <dependency linkage="Merged" />
             </entry>
           </entries>
@@ -31,5 +31,25 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="away3d-core-fp11_4_1_6" level="project" />
     <orderEntry type="library" exported="" name="starling" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="33ba36b4-0b83-4594-b145-400ba2209c5d" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/away3d-core-fp11_4_1_6.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="b0a7a2cb-aa64-434e-82c6-0ef72bb06a95" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/starling.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
