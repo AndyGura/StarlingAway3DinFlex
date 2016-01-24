@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<stagecomponentswrapper:StageComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                       xmlns:stagecomponentswrapper="com.andrewgura.stageComponentsWrapper.*"
+                                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                                       addedToStage="onAddedToStage(event)"
+                                       mouseMove="onMouseMove(event)" mouseUp="onMouseUp(event)">
+
+    <fx:Script><![CDATA[
+        import away3d.containers.Scene3D;
+        import away3d.containers.View3D;
+
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+
+        private var _view:View3D;
+        private var _scene:Scene3D;
+
+        private var isAddedToStage:Boolean = false;
+
+        private var viewRho:Number = 944;
+        private var viewPhi:Number = 1;
+        private var viewTetta:Number = Math.PI / 4;
+
+
+        [Bindable(event="sceneChanged")]
+        public function get scene():Scene3D {
+            return _scene;
+        }
+
+        public function set scene(value:Scene3D):void {
+            if (_scene == value) return;
+            _scene = value;
+            if (isAddedToStage) {
+                updateAway3dScene();
+            }
+            dispatchEvent(new Event("sceneChanged"));
+        }
+
+        override protected function onResizeWithDelay():void {
+            super.onResizeWithDelay();
+            _view.width = this.width;
+            _view.height = this.height;
+        }
+
+        private function onAddedToStage(event:Event):void {
+            instances.push(this);
+            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
+            if (!isReady) {
+                addedToStageHandlers.push(onAddedToStage);
+                return;
+            }
+            isAddedToStage = true;
+            updateMask();
+            setupParents();
+            if (isGloballyVisible()) {
+                setMask();
+                isShow = true;
+                visibleStarlingComponentsCount++;
+                onStageResized();
+            }
+            if (_scene) {
+                updateAway3dScene();
+            }
+        }
+
+        private function updateAway3dScene():void {
+            if (!_view) {
+                _view = new View3D();
+                _view.width = this.width;
+                _view.height = this.height;
+                _view.stage3DProxy = StageComponent.stage3DProxy;
+                _view.shareContext = true;
+                StageComponent.stage3DProxy.color = getStyle('contentBackgroundColor');
+                uiComponent.addChild(_view);
+            }
+            _view.camera.x = viewRho * Number.sin(viewTetta) * Number.cos(viewPhi);
+            _view.camera.z = viewRho * Number.sin(viewTetta) * Number.sin(viewPhi);
+            _view.camera.y = viewRho * Number.cos(viewTetta);
+            _view.camera.lookAt(new Vector3D());
+            _view.scene = _scene;
+        }
+
+
+        override protected function hideShowHandler(event:FlexEvent):void {
+            super.hideShowHandler(event);
+            updateAway3dScene();
+        }
+
+        private var oldLocalX:Number;
+        private var oldLocalY:Number;
+
+        private function onMouseMove(event:MouseEvent):void {
+            if (event.buttonDown) {
+                if (!isNaN(oldLocalX) && !isNaN(oldLocalY)) {
+                    viewPhi -= (event.localX - oldLocalX) / 5;
+                    viewTetta -= (event.localY - oldLocalY) / 5;
+                    viewTetta = Math.max(Math.min(viewTetta, Math.PI), 0.01);
+                    updateAway3dScene();
+                }
+                oldLocalX = event.localX;
+                oldLocalY = event.localY;
+            }
+        }
+
+        private function onMouseUp(event:MouseEvent):void {
+            oldLocalX = NaN;
+            oldLocalY = NaN;
+        }
+
+        override protected function render():void {
+            _view.render();
+        }
+        ]]>
+    </fx:Script>
+
+    <mx:UIComponent width="100%" height="100%" id="uiComponent"/>
+
+</stagecomponentswrapper:StageComponent>

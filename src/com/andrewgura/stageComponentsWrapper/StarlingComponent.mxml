@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<stagecomponentswrapper:StageComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                       xmlns:stagecomponentswrapper="com.andrewgura.stageComponentsWrapper.*"
+                                       addedToStage="addedToStageHandler(event)">
+
+
+    <fx:Script><![CDATA[
+        import mx.events.FlexEvent;
+
+        import starling.core.Starling;
+        import starling.display.DisplayObject;
+
+        public static var starlingRoot:StarlingWrapperRoot;
+        private static var starlingMasks:Array = [];
+        public static var starling:Starling;
+
+        private var _starlingComponent:starling.display.DisplayObject;
+
+        public function get starlingComponent():starling.display.DisplayObject {
+            return _starlingComponent;
+        }
+
+        public function set starlingComponent(value:starling.display.DisplayObject):void {
+            if (_starlingComponent && starlingRoot) {
+                starlingRoot.removeChild(_starlingComponent);
+            }
+            _starlingComponent = value;
+            if (starlingRoot) {
+                starlingRoot.addChild(_starlingComponent);
+            }
+            if (!isShow && isGloballyVisible()) {
+                setMask();
+                isShow = true;
+                visibleStarlingComponentsCount++;
+                if (visibleStarlingComponentsCount == 1) {
+                    onStageResized();
+                }
+            }
+            updateStarlingComponent();
+        }
+
+        private function addedToStageHandler(event:Event):void {
+            instances.push(this);
+            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
+            if (!isReady) {
+                addedToStageHandlers.push(addedToStageHandler);
+                return;
+            }
+            if (!starling) {
+                starling = new Starling(StarlingWrapperRoot, stage, StageComponent.stage3DProxy.viewPort, StageComponent.stage3DProxy.stage3D);
+                starling.start();
+                if (starlingComponent) {
+                    starlingRoot.addChild(_starlingComponent);
+                }
+            }
+            updateMask();
+            setupParents();
+            if (isGloballyVisible()) {
+                setMask();
+                isShow = true;
+                visibleStarlingComponentsCount++;
+                if (visibleStarlingComponentsCount == 1) {
+                    onStageResized();
+                }
+            }
+            updateStarlingComponent();
+        }
+
+        override protected function onResizeWithDelay():void {
+            super.onResizeWithDelay();
+            updateStarlingComponent();
+        }
+
+        private function updateStarlingComponent():void {
+            if (!starlingComponent) {
+                return;
+            }
+            starlingComponent.visible = isShow;
+            if (!isShow) {
+                return;
+            }
+            starlingComponent.x = localToGlobal(new Point()).x;
+            starlingComponent.y = localToGlobal(new Point()).y;
+            starlingComponent.width = width;
+            starlingComponent.height = height;
+        }
+
+        override protected function hideShowHandler(event:FlexEvent):void {
+            super.hideShowHandler(event);
+            updateStarlingComponent();
+        }
+
+        override protected function render():void {
+            starling.nextFrame();
+        }
+        ]]>
+    </fx:Script>
+
+</stagecomponentswrapper:StageComponent>
