@@ -40,12 +40,13 @@
         }
 
         private function addedToStageHandler(event:Event):void {
+            initialize;
             instances.push(this);
-            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             if (!isReady) {
                 addedToStageHandlers.push(addedToStageHandler);
                 return;
             }
+            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             if (!starling) {
                 starling = new Starling(StarlingWrapperRoot, stage, StageComponent.stage3DProxy.viewPort, StageComponent.stage3DProxy.stage3D);
                 starling.start();

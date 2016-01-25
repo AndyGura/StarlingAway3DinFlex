@@ -33,14 +33,16 @@ public class StageComponent extends Group {
     protected static var addedToStageHandlers:Array = [];
     protected static var instances:Array = [];
 
-    private static var starlingMasks:Array = [];
-
     public static var initialize:* = function init():void {
         var application:DisplayObject = DisplayObject(FlexGlobals.topLevelApplication);
-        application.addEventListener(Event.ADDED_TO_STAGE, onApplicationAddedToStage);
+        if (application.stage) {
+            onApplicationAddedToStage();
+        } else {
+            application.addEventListener(Event.ADDED_TO_STAGE, onApplicationAddedToStage);
+        }
     }();
 
-    private static function onApplicationAddedToStage(event:Event):void {
+    private static function onApplicationAddedToStage(event:Event = null):void {
         var stage:Stage = FlexGlobals.topLevelApplication.stage;
         stage.addEventListener(ResizeEvent.RESIZE, onStageResized);
         stage.align = StageAlign.TOP_LEFT;

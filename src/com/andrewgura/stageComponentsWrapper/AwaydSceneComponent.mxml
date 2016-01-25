@@ -43,12 +43,13 @@
         }
 
         private function onAddedToStage(event:Event):void {
+            initialize;
             instances.push(this);
-            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             if (!isReady) {
                 addedToStageHandlers.push(onAddedToStage);
                 return;
             }
+            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             isAddedToStage = true;
             updateMask();
             setupParents();
@@ -78,8 +79,18 @@
             _view.camera.y = viewRho * Number.cos(viewTetta);
             _view.camera.lookAt(new Vector3D());
             _view.scene = _scene;
+            var index:Number = -1;
+            try {
+                index = uiComponent.getChildIndex(_view);
+            } catch (e:Error) {
+                //silent
+            }
+            if (isShow && index == -1) {
+                uiComponent.addChild(_view);
+            } else if (!isShow && index >= 0) {
+                uiComponent.removeChild(_view);
+            }
         }
-
 
         override protected function hideShowHandler(event:FlexEvent):void {
             super.hideShowHandler(event);
@@ -108,8 +119,11 @@
         }
 
         override protected function render():void {
-            _view.render();
+            if (isShow) {
+                _view.render();
+            }
         }
+
         ]]>
     </fx:Script>
 
