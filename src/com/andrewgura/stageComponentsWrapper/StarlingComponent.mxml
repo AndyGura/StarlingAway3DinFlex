@@ -40,7 +40,7 @@
         }
 
         private function addedToStageHandler(event:Event):void {
-            initialize;
+            initialize();
             instances.push(this);
             if (!isReady) {
                 addedToStageHandlers.push(addedToStageHandler);
@@ -74,6 +74,7 @@
 
         private function updateStarlingComponent():void {
             if (!starlingComponent) {
+                isSomethingChanged = false;
                 return;
             }
             starlingComponent.visible = isShow;
@@ -84,6 +85,7 @@
             starlingComponent.y = localToGlobal(new Point()).y;
             starlingComponent.width = width;
             starlingComponent.height = height;
+            isSomethingChanged = true;
         }
 
         override protected function hideShowHandler(event:FlexEvent):void {
@@ -92,8 +94,12 @@
         }
 
         override protected function render():void {
-            starling.nextFrame();
+            if (isShow) {
+                starling.nextFrame();
+            }
+            super.render();
         }
+
         ]]>
     </fx:Script>
 

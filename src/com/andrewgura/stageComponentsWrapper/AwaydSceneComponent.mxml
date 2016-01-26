@@ -10,7 +10,6 @@
         import away3d.containers.View3D;
 
         import mx.events.FlexEvent;
-        import mx.events.ResizeEvent;
 
         private var _view:View3D;
         private var _scene:Scene3D;
@@ -90,6 +89,7 @@
             } else if (!isShow && index >= 0) {
                 uiComponent.removeChild(_view);
             }
+            isSomethingChanged = true;
         }
 
         override protected function hideShowHandler(event:FlexEvent):void {
@@ -122,8 +122,8 @@
             if (isShow) {
                 _view.render();
             }
+            super.render();
         }
-
         ]]>
     </fx:Script>
 

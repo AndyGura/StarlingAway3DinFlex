@@ -29,6 +29,8 @@ public class StageComponent extends Group {
     private static var stage3DManager:Stage3DManager;
     protected static var stage3DProxy:Stage3DProxy;
 
+    protected var isSomethingChanged:Boolean = false;
+
     protected static var isReady:Boolean = false;
     protected static var addedToStageHandlers:Array = [];
     protected static var instances:Array = [];
@@ -63,6 +65,13 @@ public class StageComponent extends Group {
     }
 
     protected function _onEnterFrame(e:Event):void {
+        var isNeedToRender:Boolean = false;
+        for each (var instance:StageComponent in instances) {
+            isNeedToRender ||= instance.isSomethingChanged;
+        }
+        if (!isNeedToRender) {
+            return;
+        }
         stage3DProxy.clear();
         for each (var instance:StageComponent in instances) {
             instance.render();
@@ -163,6 +172,11 @@ public class StageComponent extends Group {
         currentMask.graphics.endFill();
     }
 
+    override public function invalidateDisplayList():void {
+        super.invalidateDisplayList();
+        isSomethingChanged = true;
+    }
+
     protected function setMask():void {
         for each (var o:* in parentsInfo) {
             var displayObject:DisplayObject = o.displayObject;
@@ -234,6 +248,7 @@ public class StageComponent extends Group {
     }
 
     protected function render():void {
+        isSomethingChanged = false;
     }
 }
 }
