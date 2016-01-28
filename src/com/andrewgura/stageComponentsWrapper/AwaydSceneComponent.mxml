@@ -2,8 +2,7 @@
 <stagecomponentswrapper:StageComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
                                        xmlns:stagecomponentswrapper="com.andrewgura.stageComponentsWrapper.*"
                                        xmlns:mx="library://ns.adobe.com/flex/mx"
-                                       addedToStage="onAddedToStage(event)"
-                                       mouseMove="onMouseMove(event)" mouseUp="onMouseUp(event)">
+                                       mouseMove="onMouseMove(event)" mouseUp="onMouseUp(event)" mouseWheel="onMouseWheel(event)">
 
     <fx:Script><![CDATA[
         import away3d.containers.Scene3D;
@@ -35,29 +34,13 @@
             dispatchEvent(new Event("sceneChanged"));
         }
 
-        override protected function onResizeWithDelay():void {
-            super.onResizeWithDelay();
-            _view.width = this.width;
-            _view.height = this.height;
-        }
-
-        private function onAddedToStage(event:Event):void {
-            initialize;
-            instances.push(this);
+        override protected function onAddedToStage(event:Event):void {
+            super.onAddedToStage(event);
             if (!isReady) {
-                addedToStageHandlers.push(onAddedToStage);
                 return;
             }
-            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             isAddedToStage = true;
-            updateMask();
-            setupParents();
-            if (isGloballyVisible()) {
-                setMask();
-                isShow = true;
-                visibleStarlingComponentsCount++;
-                onStageResized();
-            }
+            initStageComponent();
             if (_scene) {
                 updateAway3dScene();
             }
@@ -66,13 +49,13 @@
         private function updateAway3dScene():void {
             if (!_view) {
                 _view = new View3D();
-                _view.width = this.width;
-                _view.height = this.height;
                 _view.stage3DProxy = StageComponent.stage3DProxy;
                 _view.shareContext = true;
                 StageComponent.stage3DProxy.color = getStyle('contentBackgroundColor');
                 uiComponent.addChild(_view);
             }
+            _view.width = this.width;
+            _view.height = this.height;
             _view.camera.x = viewRho * Number.sin(viewTetta) * Number.cos(viewPhi);
             _view.camera.z = viewRho * Number.sin(viewTetta) * Number.sin(viewPhi);
             _view.camera.y = viewRho * Number.cos(viewTetta);
@@ -89,12 +72,24 @@
             } else if (!isShow && index >= 0) {
                 uiComponent.removeChild(_view);
             }
-            isSomethingChanged = true;
+            isNeedToRender = true;
         }
 
         override protected function hideShowHandler(event:FlexEvent):void {
             super.hideShowHandler(event);
             updateAway3dScene();
+        }
+
+        override public function validateDisplayList():void {
+            super.validateDisplayList();
+            updateAway3dScene();
+        }
+
+        override protected function render():void {
+            if (isShow) {
+                _view.render();
+            }
+            super.render();
         }
 
         private var oldLocalX:Number;
@@ -118,12 +113,12 @@
             oldLocalY = NaN;
         }
 
-        override protected function render():void {
-            if (isShow) {
-                _view.render();
-            }
-            super.render();
+        private function onMouseWheel(event:MouseEvent):void {
+            viewRho *= (1-event.delta/100);
+            viewRho = Math.min(viewRho, 2500);
+            updateAway3dScene();
         }
+
         ]]>
     </fx:Script>
 

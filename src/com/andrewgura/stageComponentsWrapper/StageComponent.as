@@ -26,10 +26,9 @@ import starling.core.Starling;
 
 public class StageComponent extends Group {
 
-    private static var stage3DManager:Stage3DManager;
     protected static var stage3DProxy:Stage3DProxy;
 
-    protected var isSomethingChanged:Boolean = false;
+    protected var isNeedToRender:Boolean = false;
 
     protected static var isReady:Boolean = false;
     protected static var addedToStageHandlers:Array = [];
@@ -50,7 +49,7 @@ public class StageComponent extends Group {
         stage.align = StageAlign.TOP_LEFT;
         stage.scaleMode = StageScaleMode.NO_SCALE;
 
-        stage3DManager = Stage3DManager.getInstance(stage);
+        var stage3DManager:Stage3DManager = Stage3DManager.getInstance(stage);
         stage3DProxy = stage3DManager.getFreeStage3DProxy();
         stage3DProxy.addEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
         stage3DProxy.antiAlias = 8;
@@ -64,23 +63,56 @@ public class StageComponent extends Group {
         }
     }
 
+    public function StageComponent() {
+        super();
+        addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+    }
+
+    protected function onAddedToStage(event:Event):void {
+        initialize();
+        instances.push(this);
+        if (!isReady) {
+            addedToStageHandlers.push(onAddedToStage);
+            return;
+        }
+        addEventListener(Event.ENTER_FRAME, _onEnterFrame);
+    }
+
+    protected function initStageComponent():void {
+        updateMask();
+        setupParents();
+        if (isGloballyVisible()) {
+            setMask();
+            isShow = true;
+            visibleStageComponentsCount++;
+            if (visibleStageComponentsCount == 1) {
+                onStageResized();
+            }
+        }
+    }
+
     protected function _onEnterFrame(e:Event):void {
         var isNeedToRender:Boolean = false;
         for each (var instance:StageComponent in instances) {
-            isNeedToRender ||= instance.isSomethingChanged;
+            isNeedToRender ||= instance.isNeedToRender;
+            if (isNeedToRender) {
+                continue;
+            }
         }
         if (!isNeedToRender) {
             return;
         }
         stage3DProxy.clear();
         for each (var instance:StageComponent in instances) {
-            instance.render();
+            if (instance.isNeedToRender) {
+                instance.render();
+            }
         }
         stage3DProxy.present();
     }
 
     protected static function onStageResized(e:Event = null):void {
-        if (visibleStarlingComponentsCount == 0) {
+        if (visibleStageComponentsCount == 0) {
             return;
         }
         var stage:Stage = FlexGlobals.topLevelApplication.stage;
@@ -107,39 +139,20 @@ public class StageComponent extends Group {
     protected var currentMask:Sprite;
     protected static var maskGroup:Group;
     protected static var fullMask:UIComponent;
-    protected static var visibleStarlingComponentsCount:Number = 0;
-
-    private function addedToStageHandler(event:Event):void {
-        updateMask();
-        setupParents();
-        if (isGloballyVisible()) {
-            setMask();
-            isShow = true;
-            visibleStarlingComponentsCount++;
-            if (visibleStarlingComponentsCount == 1) {
-                onStageResized();
-            }
-        }
-    }
+    protected static var visibleStageComponentsCount:Number = 0;
 
     protected function setupParents():void {
         runOnParents(a);
         function a(displayObject:DisplayObject):void {
             parentsInfo.push({displayObject: displayObject, originalMask: displayObject.mask});
-            if (displayObject is StageComponent || displayObject == application) {
-                displayObject.addEventListener(ResizeEvent.RESIZE, onResize);
-            }
             displayObject.addEventListener(FlexEvent.SHOW, hideShowHandler);
             displayObject.addEventListener(FlexEvent.HIDE, hideShowHandler);
         }
     }
 
-    private function onResize(event:Event):void {
-        callLater(onResizeWithDelay);
-    }
-
-    protected function onResizeWithDelay():void {
-        if (visibleStarlingComponentsCount == 0) {
+    override public function validateDisplayList():void {
+        super.validateDisplayList();
+        if (visibleStageComponentsCount == 0) {
             return;
         }
         updateMask();
@@ -174,7 +187,7 @@ public class StageComponent extends Group {
 
     override public function invalidateDisplayList():void {
         super.invalidateDisplayList();
-        isSomethingChanged = true;
+        isNeedToRender = true;
     }
 
     protected function setMask():void {
@@ -189,7 +202,7 @@ public class StageComponent extends Group {
     }
 
     protected function unsetMask():void {
-        if (visibleStarlingComponentsCount == 0) {
+        if (visibleStageComponentsCount == 0) {
             for each (var o:* in parentsInfo) {
                 var displayObject:DisplayObject = o.displayObject;
                 if (displayObject == this || !(displayObject is GroupBase)) {
@@ -206,16 +219,16 @@ public class StageComponent extends Group {
                 updateMask();
                 setMask();
                 isShow = true;
-                visibleStarlingComponentsCount++;
+                visibleStageComponentsCount++;
                 fullMask.addChild(currentMask);
-                if (visibleStarlingComponentsCount == 1) {
+                if (visibleStageComponentsCount == 1) {
                     onStageResized();
                 }
             }
         } else {
             if (isShow) {
                 isShow = false;
-                visibleStarlingComponentsCount--;
+                visibleStageComponentsCount--;
                 fullMask.removeChild(currentMask);
                 unsetMask();
             }
@@ -248,7 +261,7 @@ public class StageComponent extends Group {
     }
 
     protected function render():void {
-        isSomethingChanged = false;
+        isNeedToRender = false;
     }
 }
 }

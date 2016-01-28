@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <stagecomponentswrapper:StageComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
-                                       xmlns:stagecomponentswrapper="com.andrewgura.stageComponentsWrapper.*"
-                                       addedToStage="addedToStageHandler(event)">
+                                       xmlns:stagecomponentswrapper="com.andrewgura.stageComponentsWrapper.*">
 
 
     <fx:Script><![CDATA[
@@ -31,22 +30,19 @@
             if (!isShow && isGloballyVisible()) {
                 setMask();
                 isShow = true;
-                visibleStarlingComponentsCount++;
-                if (visibleStarlingComponentsCount == 1) {
+                visibleStageComponentsCount++;
+                if (visibleStageComponentsCount == 1) {
                     onStageResized();
                 }
             }
             updateStarlingComponent();
         }
 
-        private function addedToStageHandler(event:Event):void {
-            initialize();
-            instances.push(this);
+        override protected function onAddedToStage(event:Event):void {
+            super.onAddedToStage(event);
             if (!isReady) {
-                addedToStageHandlers.push(addedToStageHandler);
                 return;
             }
-            addEventListener(Event.ENTER_FRAME, _onEnterFrame);
             if (!starling) {
                 starling = new Starling(StarlingWrapperRoot, stage, StageComponent.stage3DProxy.viewPort, StageComponent.stage3DProxy.stage3D);
                 starling.start();
@@ -54,27 +50,17 @@
                     starlingRoot.addChild(_starlingComponent);
                 }
             }
-            updateMask();
-            setupParents();
-            if (isGloballyVisible()) {
-                setMask();
-                isShow = true;
-                visibleStarlingComponentsCount++;
-                if (visibleStarlingComponentsCount == 1) {
-                    onStageResized();
-                }
-            }
+            initStageComponent();
             updateStarlingComponent();
         }
 
-        override protected function onResizeWithDelay():void {
-            super.onResizeWithDelay();
+        override public function validateDisplayList():void {
+            super.validateDisplayList();
             updateStarlingComponent();
         }
 
         private function updateStarlingComponent():void {
             if (!starlingComponent) {
-                isSomethingChanged = false;
                 return;
             }
             starlingComponent.visible = isShow;
@@ -85,7 +71,7 @@
             starlingComponent.y = localToGlobal(new Point()).y;
             starlingComponent.width = width;
             starlingComponent.height = height;
-            isSomethingChanged = true;
+            isNeedToRender = true;
         }
 
         override protected function hideShowHandler(event:FlexEvent):void {
@@ -99,7 +85,6 @@
             }
             super.render();
         }
-
         ]]>
     </fx:Script>
 
