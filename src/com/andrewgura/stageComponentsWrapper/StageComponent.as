@@ -93,7 +93,8 @@ public class StageComponent extends Group {
 
     protected function _onEnterFrame(e:Event):void {
         var isNeedToRender:Boolean = false;
-        for each (var instance:StageComponent in instances) {
+        var instance:StageComponent;
+        for each (instance in instances) {
             isNeedToRender ||= instance.isNeedToRender;
             if (isNeedToRender) {
                 continue;
@@ -103,7 +104,7 @@ public class StageComponent extends Group {
             return;
         }
         stage3DProxy.clear();
-        for each (var instance:StageComponent in instances) {
+        for each (instance in instances) {
             if (instance.isNeedToRender) {
                 instance.render();
             }
